@@ -21,7 +21,7 @@ func (s *Service) SignUp(ctx *gin.Context) {
 	}
 
 	// 1. 判断用户是否存在
-	user, err := s.accountDao.GetByUsername(param.Username, true)
+	user, err := s.accountDao.GetByUsernameOrId(param.Username, 0, true)
 	if err != nil {
 		result.ServerError(ctx)
 		return
@@ -63,7 +63,7 @@ func (s *Service) SignIn(ctx *gin.Context) {
 		return
 	}
 	// 1. 用户有没有 && 用户密码是否正确
-	user, err := s.accountDao.GetByUsername(param.Username, false)
+	user, err := s.accountDao.GetByUsernameOrId(param.Username, 0, false)
 	if err != nil {
 		logrus.Errorf("[account|SignIn] 登录异常, err: [%+v]", err)
 		result.ServerError(ctx)

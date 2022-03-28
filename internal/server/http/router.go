@@ -16,11 +16,12 @@ func v1(r *gin.Engine, s *service.Service) {
 
 	// 用户相关
 	account := routerGroup.Group("account")
-	account.GET("", s.Account.List)
-	// 注册
 	account.POST("signup", s.Account.SignUp)
-	// 登录
 	account.POST("signin", s.Account.SignIn)
+	// 下面的接口需要鉴权
+	account.Use(Auth())
+	account.GET("friends", s.Account.ListMyFriend)
+	account.GET("friends/find", s.Account.PageFindFriend)
 
 	// 记录相关
 	record := routerGroup.Group("record")

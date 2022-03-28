@@ -7,6 +7,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/lib/pq v1.10.2
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
