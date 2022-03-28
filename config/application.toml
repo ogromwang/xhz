@@ -1,3 +1,8 @@
 [Application]
     Name = "xiaohuazhu"
     Port = "8080"
+
+[Application.Auth]
+    PasswordSalt = "_jiangjiang"
+    JwtSigned = "bf19d68e1caee5738c7c7194107ec897"
+    JwtExpireHour = 168

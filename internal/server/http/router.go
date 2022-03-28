@@ -17,7 +17,10 @@ func v1(r *gin.Engine, s *service.Service) {
 	// 用户相关
 	account := routerGroup.Group("account")
 	account.GET("", s.Account.List)
-	account.POST("", s.Account.Add)
+	// 注册
+	account.POST("signup", s.Account.SignUp)
+	// 登录
+	account.POST("signin", s.Account.SignIn)
 
 	// 记录相关
 	record := routerGroup.Group("record")

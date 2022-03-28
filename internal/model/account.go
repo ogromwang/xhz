@@ -9,6 +9,7 @@ type Account struct {
 	gorm.Model
 	Username string
 	Password string
+	Icon     string
 }
 
 func (m *Account) TableName() string {
@@ -19,5 +20,6 @@ type AccountDTO struct {
 	Id       uint      `json:"id"`
 	Username string    `json:"username" binding:"required"`
 	Password string    `json:"password" binding:"required"`
+	Icon     string    `json:"icon"`
 	CreateAt time.Time `json:"createAt"`
 }

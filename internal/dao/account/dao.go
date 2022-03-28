@@ -1,6 +1,7 @@
 package account
 
 import (
+	"gorm.io/gorm"
 	"xiaohuazhu/internal/config"
 	"xiaohuazhu/internal/model"
 
@@ -8,7 +9,6 @@ import (
 )
 
 type Dao struct {
-
 }
 
 func New() *Dao {
@@ -26,4 +26,17 @@ func (d *Dao) List() (resp []*model.Account, err error) {
 func (d *Dao) Add(account *model.Account) (err error) {
 	err = config.OrmDB.Save(account).Error
 	return
+}
+
+func (d *Dao) GetByUsername(username string, onlyExist bool) (po *model.Account, err error) {
+	po = &model.Account{}
+	db := config.OrmDB.Where("username = ?", username)
+	if onlyExist {
+		db.Select("1")
+	}
+	err = db.Limit(1).Find(po).Error
+	if err != nil && err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	return po, nil
 }

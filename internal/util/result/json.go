@@ -21,10 +21,18 @@ func Success(ctx *gin.Context) {
 	})
 }
 
-func Fail(ctx *gin.Context, resp string)  {
+func Fail(ctx *gin.Context, resp string) {
 	ctx.JSON(200, model.Result{
 		Code:  500,
 		Data:  nil,
 		Error: resp,
+	})
+}
+
+func ServerError(ctx *gin.Context) {
+	ctx.JSON(200, model.Result{
+		Code:  505,
+		Data:  nil,
+		Error: "服务器内部错误",
 	})
 }

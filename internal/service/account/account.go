@@ -6,7 +6,6 @@ import (
 	"xiaohuazhu/internal/util/result"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type Service struct {
@@ -35,27 +34,5 @@ func (s *Service) List(ctx *gin.Context) {
 		}
 		resp = append(resp, pr)
 	}
-
 	result.Ok(ctx, resp)
-}
-
-func (s *Service) Add(ctx *gin.Context) {
-	logrus.Infof("[account | Add] 开始创建用户")
-	var param = model.AccountDTO{}
-
-	if err := ctx.ShouldBindJSON(&param); err != nil {
-		result.Fail(ctx, "参数错误")
-		return
-	}
-
-	var po = model.Account{
-		Username: param.Username,
-		Password: param.Password,
-	}
-	// 保存
-	if err := s.accountDao.Add(&po); err != nil {
-		result.Fail(ctx, err.Error())
-		return
-	}
-	result.Success(ctx)
 }
