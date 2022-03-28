@@ -16,7 +16,6 @@ import (
 var (
 	AllConfig *model.Config
 	AllConn   *model.Conn
-	OrmDB     *gorm.DB
 	path      = flag.String("f", "../config/", "配置文件的位置")
 )
 

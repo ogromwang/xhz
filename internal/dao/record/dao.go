@@ -6,7 +6,6 @@ import (
 )
 
 type Dao struct {
-
 }
 
 func New() *Dao {
@@ -14,6 +13,6 @@ func New() *Dao {
 }
 
 func (d *Dao) Add(account *model.RecordMoney) (err error) {
-	err = config.OrmDB.Save(account).Error
+	err = config.AllConn.Db.Save(account).Error
 	return
 }

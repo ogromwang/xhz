@@ -16,7 +16,7 @@ func New() *Dao {
 }
 
 func (d *Dao) List() (resp []*model.Account, err error) {
-	if err = config.OrmDB.Find(&resp).Error; err != nil {
+	if err = config.AllConn.Db.Find(&resp).Error; err != nil {
 		logrus.Errorf("[account | list] 发生错误, %s", err.Error())
 		return
 	}
@@ -24,17 +24,17 @@ func (d *Dao) List() (resp []*model.Account, err error) {
 }
 
 func (d *Dao) Add(account *model.Account) (err error) {
-	err = config.OrmDB.Save(account).Error
+	err = config.AllConn.Db.Save(account).Error
 	return
 }
 
 func (d *Dao) GetByUsername(username string, onlyExist bool) (po *model.Account, err error) {
 	po = &model.Account{}
-	db := config.OrmDB.Where("username = ?", username)
+	db := config.AllConn.Db.Where("username = ?", username)
 	if onlyExist {
-		db.Select("1")
+		db.Select("id")
 	}
-	err = db.Limit(1).Find(po).Error
+	err = db.Limit(1).First(po).Error
 	if err != nil && err == gorm.ErrRecordNotFound {
 		return nil, nil
 	}

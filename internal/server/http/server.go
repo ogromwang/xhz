@@ -6,10 +6,10 @@ import (
 	"xiaohuazhu/internal/service"
 )
 
-func New()  {
+func New() {
 	r := gin.Default()
 	s := service.New()
 	router(r, s)
 
-	r.Run(":" + config.AllConfig.Application.Port)
+	_ = r.Run(":" + config.AllConfig.Application.Port)
 }

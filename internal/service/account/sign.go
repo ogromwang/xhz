@@ -27,6 +27,7 @@ func (s *Service) SignUp(ctx *gin.Context) {
 		return
 	}
 	if user != nil {
+		logrus.Warnf("[account|SignUp] 该用户名已被注册, username: [%s]", param.Username)
 		result.Fail(ctx, "该用户名已被注册")
 		return
 	}
@@ -45,9 +46,11 @@ func (s *Service) SignUp(ctx *gin.Context) {
 	}
 	// 保存
 	if err := s.accountDao.Add(&po); err != nil {
+		logrus.Errorf("[account|SignUp] 注册异常, err: [%+v]", err)
 		result.Fail(ctx, err.Error())
 		return
 	}
+	logrus.Infof("用户: [%s] 注册成功", param.Username)
 	result.Success(ctx)
 }
 
@@ -90,10 +93,6 @@ func (s *Service) SignIn(ctx *gin.Context) {
 		result.ServerError(ctx)
 		return
 	}
+	logrus.Infof("[account|SignIn] 用户登录成功: [%s]", param.Username)
 	result.Ok(ctx, token)
-}
-
-// SignOut out
-func (s *Service) SignOut(ctx *gin.Context) {
-
 }
