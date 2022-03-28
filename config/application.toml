@@ -1,0 +1,3 @@
+[Application]
+    Name = "xiaohuazhu"
+    Port = "8080"

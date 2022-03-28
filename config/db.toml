@@ -1,0 +1,3 @@
+[Db]
+    Dns = "host=localhost user=writer password=123 dbname=xiaohuazhu port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+    PreferSimpleProtocol = true
