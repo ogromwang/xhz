@@ -1,15 +1,17 @@
 package account
 
 import (
+	"os"
+
+	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
-	"os"
+
+	"xiaohuazhu/internal/config"
 	"xiaohuazhu/internal/dao/account"
 	"xiaohuazhu/internal/model"
 	"xiaohuazhu/internal/util/oss"
 	"xiaohuazhu/internal/util/result"
-
-	"github.com/gin-gonic/gin"
 )
 
 type Service struct {
@@ -29,12 +31,36 @@ func (s *Service) ListMyFriend(ctx *gin.Context) {
 
 	list, err := s.accountDao.ListFriend(currUser.Id)
 	if err != nil {
-		logrus.Errorf("[account|ListFriend] 发生错误, %s", err.Error())
+		logrus.Errorf("[account|ListFriend] DB 发生错误, %s", err.Error())
 		result.ServerError(ctx)
 		return
 	}
 
 	result.Ok(ctx, s.transDTO(&list))
+}
+
+func (s *Service) Profile(ctx *gin.Context) {
+	data := ctx.MustGet(model.CURR_USER)
+	currUser := data.(*model.AccountDTO)
+
+	list, err := s.accountDao.List([]int64{int64(currUser.Id)})
+	if err != nil {
+		logrus.Errorf("[account|Profile] DB 发生错误, %s", err.Error())
+		result.ServerError(ctx)
+		return
+	}
+	if len(list) != 1 {
+		logrus.Warnf("[account|Profile] 警告, 数据异常")
+		result.Fail(ctx, "没有该用户")
+		return
+	}
+	user := list[0]
+	result.Ok(ctx, model.AccountDTO{
+		Id:             user.ID,
+		Username:       user.Username,
+		ProfilePicture: config.AllConfig.Oss.Endpoint + "/" + user.ProfilePicture,
+		CreateAt:       user.CreatedAt,
+	})
 }
 
 // ProfilePicture PUT 修改
@@ -199,7 +225,7 @@ func (s *Service) transDTO(accounts *[]*model.Account) []*model.AccountDTO {
 	for _, data := range *accounts {
 		pr = &model.AccountDTO{
 			Id:             data.ID,
-			ProfilePicture: data.ProfilePicture,
+			ProfilePicture: config.AllConfig.Oss.Endpoint + "/" + data.ProfilePicture,
 			Username:       data.Username,
 			CreateAt:       data.CreatedAt,
 		}

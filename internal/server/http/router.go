@@ -1,9 +1,9 @@
 package http
 
 import (
-	"xiaohuazhu/internal/service"
-
 	"github.com/gin-gonic/gin"
+
+	"xiaohuazhu/internal/service"
 )
 
 func router(r *gin.Engine, s *service.Service) {
@@ -16,14 +16,16 @@ func v1(r *gin.Engine, s *service.Service) {
 	r.MaxMultipartMemory = 8 << 20
 	routerGroup := r.Group("v1")
 
-	// 用户相关
+	// 绕过鉴权
 	account := routerGroup.Group("account")
 	account.POST("signup", s.Account.SignUp)
 	account.POST("signin", s.Account.SignIn)
-	// 下面的接口需要鉴权
+
+	// 用户相关
 	account.Use(Auth())
-	account.PUT("picture", s.Account.ProfilePicture)
+	account.GET("", s.Account.Profile)
 	account.GET("friends", s.Account.ListMyFriend)
+	account.PUT("picture", s.Account.ProfilePicture)
 	account.GET("friends/find", s.Account.PageFindFriend)
 	account.GET("friends/apply", s.Account.ListApplyFriend)
 	account.POST("friends/apply", s.Account.ApplyAddFriend)
@@ -31,5 +33,8 @@ func v1(r *gin.Engine, s *service.Service) {
 
 	// 记录相关
 	record := routerGroup.Group("record")
+	record.Use(Auth())
 	record.POST("", s.Record.Push)
+	record.GET("me", s.Record.RecordByMe)
+	record.GET("all", s.Record.RecordByFriends)
 }
