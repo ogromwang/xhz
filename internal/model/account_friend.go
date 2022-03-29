@@ -27,11 +27,16 @@ func (m *ApplyAccountFriend) TableName() string {
 }
 
 type AccountFriendPageParam struct {
-	Page     uint   `json:"page" binding:"required"`
-	PageSize uint   `json:"pageSize" binding:"required"`
-	Username string `json:"username"`
+	Page     uint   `json:"page" form:"page" binding:"required"`
+	PageSize uint   `json:"pageSize" form:"pageSize" binding:"required"`
+	Username string `json:"username" form:"username"`
 }
 
 type ApplyAddFriendParam struct {
 	Id uint `json:"id" binding:"required"`
+}
+
+type HandleAddFriendParam struct {
+	Id     uint `json:"id" binding:"required"`
+	Status int  `json:"status" binding:"required"`
 }

@@ -22,6 +22,9 @@ func v1(r *gin.Engine, s *service.Service) {
 	account.Use(Auth())
 	account.GET("friends", s.Account.ListMyFriend)
 	account.GET("friends/find", s.Account.PageFindFriend)
+	account.GET("friends/apply", s.Account.ListApplyFriend)
+	account.POST("friends/apply", s.Account.ApplyAddFriend)
+	account.POST("friends/handle", s.Account.HandleAddFriend)
 
 	// 记录相关
 	record := routerGroup.Group("record")

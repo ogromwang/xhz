@@ -23,6 +23,7 @@ func (s *Service) SignUp(ctx *gin.Context) {
 	// 1. 判断用户是否存在
 	user, err := s.accountDao.GetByUsernameOrId(param.Username, 0, true)
 	if err != nil {
+		logrus.Errorf("[account|SignUp] 查询用户异常, err: [%s]", err.Error())
 		result.ServerError(ctx)
 		return
 	}
@@ -35,6 +36,7 @@ func (s *Service) SignUp(ctx *gin.Context) {
 	// 2. 密码加密 salt
 	hash, err := bcrypt.GenerateFromPassword([]byte(param.Password+config.AllConfig.Application.Auth.PasswordSalt), bcrypt.DefaultCost)
 	if err != nil {
+		logrus.Errorf("[account|SignUp] 密码加盐编码处理, err: [%s]", err.Error())
 		result.ServerError(ctx)
 		return
 	}
