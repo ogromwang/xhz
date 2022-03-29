@@ -17,10 +17,20 @@ func New() *Dao {
 	return &Dao{}
 }
 
+func (d *Dao) UpdatePicture(uid uint, path string) (err error) {
+	account := model.Account{}
+	err = config.AllConn.Db.
+		Model(account).
+		Where("id = ?", uid).
+		UpdateColumns(map[string]interface{}{"profile_picture": path}).
+		Error
+	return
+}
+
 func (d *Dao) PageAccount(notIn []uint, param *model.AccountFriendPageParam) (resp []*model.Account, err error) {
 	resp = make([]*model.Account, 0)
 
-	offset := (param.Page - 1) / param.PageSize
+	offset := (param.Page - 1) * param.PageSize
 	db := config.AllConn.Db.
 		Offset(int(offset)).
 		Limit(int(param.PageSize)).
@@ -132,6 +142,7 @@ func (d *Dao) HandleAddFriend(friendId uint, yourId uint, status int) (err error
 	if err = tx.Debug().
 		Model(model.ApplyAccountFriend{}).
 		Where("account_id = ? and friend_id = ?", yourId, friendId).
+		Where("status = 0").
 		UpdateColumns(map[string]interface{}{"status": status}).
 		Error; err != nil {
 		tx.Rollback()

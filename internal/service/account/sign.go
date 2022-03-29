@@ -44,7 +44,7 @@ func (s *Service) SignUp(ctx *gin.Context) {
 		Username: param.Username,
 		Password: string(hash),
 		// 给一个默认icon
-		Icon: "image/test1.jpg",
+		ProfilePicture: "image/test1.jpg",
 	}
 	// 保存
 	if err := s.accountDao.Add(&po); err != nil {
@@ -86,9 +86,9 @@ func (s *Service) SignIn(ctx *gin.Context) {
 
 	// 2. 返回 jwt，client每次请求需要携带进行鉴权
 	token, err := auth.GenerateToken(&model.AccountDTO{
-		Id:       user.ID,
-		Username: user.Username,
-		Icon:     user.Icon,
+		Id:             user.ID,
+		Username:       user.Username,
+		ProfilePicture: user.ProfilePicture,
 	})
 	if err != nil {
 		logrus.Errorf("[account|SignIn] 生成 jwt 异常, err: [%+v]", err)

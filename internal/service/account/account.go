@@ -1,9 +1,12 @@
 package account
 
 import (
+	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
+	"os"
 	"xiaohuazhu/internal/dao/account"
 	"xiaohuazhu/internal/model"
+	"xiaohuazhu/internal/util/oss"
 	"xiaohuazhu/internal/util/result"
 
 	"github.com/gin-gonic/gin"
@@ -32,6 +35,55 @@ func (s *Service) ListMyFriend(ctx *gin.Context) {
 	}
 
 	result.Ok(ctx, s.transDTO(&list))
+}
+
+// ProfilePicture PUT 修改
+func (s *Service) ProfilePicture(ctx *gin.Context) {
+	data := ctx.MustGet(model.CURR_USER)
+	currUser := data.(*model.AccountDTO)
+
+	file, err := ctx.FormFile(model.FILE)
+	if err != nil {
+		logrus.Errorf("[account|ProfilePicture] 读取上传文件发生错误, %s", err.Error())
+		result.Fail(ctx, "上传文件失败")
+		return
+	}
+	// 1mb
+	if file.Size > (1 << 20) {
+		logrus.Errorf("[account|ProfilePicture] 文件大小: %d", file.Size)
+		result.Fail(ctx, "文件大小超过限制")
+		return
+	}
+	uu, _ := uuid.NewV4()
+	temp, err := os.CreateTemp("", uu.String()+"*.png")
+	if err != nil {
+		logrus.Errorf("[account|ProfilePicture] 创建临时目录异常, %s", err.Error())
+		result.ServerError(ctx)
+		return
+	}
+
+	// 处理上传的数据，写入临时
+	defer os.Remove(temp.Name())
+	defer temp.Close()
+	if err = ctx.SaveUploadedFile(file, temp.Name()); err != nil {
+		logrus.Errorf("[account|ProfilePicture] 写入临时目录: [%s] 失败, %s", temp.Name(), err.Error())
+		result.ServerError(ctx)
+		return
+	}
+	// 上传至 oss
+	path, err := oss.PushObjectByFile(temp, "picture")
+	if err != nil {
+		logrus.Errorf("[account|ProfilePicture] OSS 上传头像失败: %s %s", temp.Name(), err.Error())
+		result.Fail(ctx, "上传头像失败，请联系管理员")
+		return
+	}
+	// 回写 DB
+	if err = s.accountDao.UpdatePicture(currUser.Id, path); err != nil {
+		logrus.Errorf("[account|ProfilePicture] 更新 DB 头像失败: %s %s", temp.Name(), err.Error())
+		result.Fail(ctx, "更新信息失败")
+		return
+	}
+	result.Success(ctx)
 }
 
 // PageFindFriend 查找用户，分页，需要过滤掉已经有的
@@ -146,10 +198,10 @@ func (s *Service) transDTO(accounts *[]*model.Account) []*model.AccountDTO {
 	var pr *model.AccountDTO
 	for _, data := range *accounts {
 		pr = &model.AccountDTO{
-			Id:       data.ID,
-			Icon:     data.Icon,
-			Username: data.Username,
-			CreateAt: data.CreatedAt,
+			Id:             data.ID,
+			ProfilePicture: data.ProfilePicture,
+			Username:       data.Username,
+			CreateAt:       data.CreatedAt,
 		}
 		resp = append(resp, pr)
 	}

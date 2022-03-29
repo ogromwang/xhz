@@ -12,9 +12,9 @@ func GenerateToken(dto *model.AccountDTO) (string, error) {
 	expireTime := time.Now().Add(time.Duration(config.AllConfig.Application.Auth.JwtExpireHour) * time.Hour)
 
 	claims := model.JwtClaims{
-		ID:       int64(dto.Id),
-		Username: dto.Username,
-		Icon:     dto.Icon,
+		ID:             int64(dto.Id),
+		Username:       dto.Username,
+		ProfilePicture: dto.ProfilePicture,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
 			Issuer:    dto.Username,
@@ -39,9 +39,9 @@ func ParseToken(token string) (*model.AccountDTO, error) {
 		if _, ok := tokenClaims.Claims.(*model.JwtClaims); ok && tokenClaims.Valid {
 			jwtClaims := tokenClaims.Claims.(*model.JwtClaims)
 			return &model.AccountDTO{
-				Id:       uint(jwtClaims.ID),
-				Username: jwtClaims.Username,
-				Icon:     jwtClaims.Icon,
+				Id:             uint(jwtClaims.ID),
+				Username:       jwtClaims.Username,
+				ProfilePicture: jwtClaims.ProfilePicture,
 			}, nil
 		}
 	}

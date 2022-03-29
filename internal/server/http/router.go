@@ -12,6 +12,8 @@ func router(r *gin.Engine, s *service.Service) {
 }
 
 func v1(r *gin.Engine, s *service.Service) {
+	// 8 Mib 这不能限制，是占用多少内存
+	r.MaxMultipartMemory = 8 << 20
 	routerGroup := r.Group("v1")
 
 	// 用户相关
@@ -20,6 +22,7 @@ func v1(r *gin.Engine, s *service.Service) {
 	account.POST("signin", s.Account.SignIn)
 	// 下面的接口需要鉴权
 	account.Use(Auth())
+	account.PUT("picture", s.Account.ProfilePicture)
 	account.GET("friends", s.Account.ListMyFriend)
 	account.GET("friends/find", s.Account.PageFindFriend)
 	account.GET("friends/apply", s.Account.ListApplyFriend)

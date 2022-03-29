@@ -19,6 +19,10 @@ func PushObject(path string, prefix string) (string, error) {
 	}
 	defer f.Close()
 
+	return PushObjectByFile(f, prefix)
+}
+
+func PushObjectByFile(f *os.File, prefix string) (string, error) {
 	// 文件名
 	uu, _ := uuid.NewV4()
 	fileName := fmt.Sprintf("%s_%s.jpg", prefix, uu.String())
@@ -46,7 +50,7 @@ func PushObject(path string, prefix string) (string, error) {
 		logrus.Errorf("minio pushObject, err: %s", err.Error())
 		return "", err
 	}
-	logrus.Infof("minio pushobject 成功, 名称: %s", fileName)
+	logrus.Infof("minio pushobject 成功, 名称: image/%s", fileName)
 
 	return "image/" + fileName, nil
 }

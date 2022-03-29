@@ -7,9 +7,9 @@ import (
 
 type Account struct {
 	gorm.Model
-	Username string
-	Password string
-	Icon     string
+	Username       string
+	Password       string
+	ProfilePicture string
 }
 
 func (m *Account) TableName() string {
@@ -17,9 +17,9 @@ func (m *Account) TableName() string {
 }
 
 type AccountDTO struct {
-	Id       uint      `json:"id"`
-	Username string    `json:"username" binding:"required"`
-	Password string    `json:"password" binding:"required"`
-	Icon     string    `json:"icon"`
-	CreateAt time.Time `json:"createAt"`
+	Id             uint      `json:"id"`
+	Username       string    `json:"username" binding:"required"`
+	Password       string    `json:"password" binding:"required"`
+	ProfilePicture string    `json:"profile_picture"`
+	CreateAt       time.Time `json:"createAt"`
 }

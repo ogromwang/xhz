@@ -11,10 +11,10 @@ import (
 
 func TestGenerateToken(t *testing.T) {
 	mo := &model.AccountDTO{
-		Id:       12,
-		Username: "test",
-		Password: "123123",
-		Icon:     "image/test.jpg",
+		Id:             12,
+		Username:       "test",
+		Password:       "123123",
+		ProfilePicture: "image/test.jpg",
 	}
 	token, err := GenerateToken(mo)
 	assert.Nil(t, err, err.Error())
