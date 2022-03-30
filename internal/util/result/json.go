@@ -13,6 +13,18 @@ func Ok(ctx *gin.Context, resp interface{}) {
 	})
 }
 
+func OkWithTotal(ctx *gin.Context, resp interface{}, total int64) {
+	page := model.ResultWithPage{
+		List:  resp,
+		Total: total,
+	}
+	ctx.JSON(200, model.Result{
+		Code:  200,
+		Data:  page,
+		Error: "",
+	})
+}
+
 func Success(ctx *gin.Context) {
 	ctx.JSON(200, model.Result{
 		Code:  200,

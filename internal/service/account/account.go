@@ -2,6 +2,7 @@ package account
 
 import (
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
@@ -24,19 +25,26 @@ func NewService() *Service {
 	}
 }
 
-// ListMyFriend 我的好友
-func (s *Service) ListMyFriend(ctx *gin.Context) {
+// PageMyFriend 我的好友
+func (s *Service) PageMyFriend(ctx *gin.Context) {
 	data := ctx.MustGet(model.CURR_USER)
 	currUser := data.(*model.AccountDTO)
 
-	list, err := s.accountDao.ListFriend(currUser.Id)
+	logrus.Infof("[account|PageMyFriend] 寻找账号")
+	var param = model.AccountFriendPageParam{}
+	if err := ctx.ShouldBindQuery(&param); err != nil {
+		result.Fail(ctx, "参数错误")
+		return
+	}
+
+	list, total, err := s.accountDao.PageFriend(currUser.Id, &param)
 	if err != nil {
-		logrus.Errorf("[account|ListFriend] DB 发生错误, %s", err.Error())
+		logrus.Errorf("[account|PageFriend] DB 发生错误, %s", err.Error())
 		result.ServerError(ctx)
 		return
 	}
 
-	result.Ok(ctx, s.transDTO(&list))
+	result.OkWithTotal(ctx, s.transDTO(&list), total)
 }
 
 func (s *Service) Profile(ctx *gin.Context) {
@@ -123,26 +131,19 @@ func (s *Service) PageFindFriend(ctx *gin.Context) {
 		result.Fail(ctx, "参数错误")
 		return
 	}
+	if strings.Trim(param.Username, " ") == "" {
+		result.Fail(ctx, "请填写名称")
+		return
+	}
 
-	friend, err := s.accountDao.ListFriend(currUser.Id)
+	accounts, total, err := s.accountDao.PageFindAccount(currUser.Id, &param)
 	if err != nil {
 		logrus.Errorf("[account|PageFindFriend] 发生错误, %s", err.Error())
 		result.ServerError(ctx)
 		return
 	}
-	notIns := make([]uint, 0, len(friend)+1)
-	notIns = append(notIns, currUser.Id)
-	for _, f := range friend {
-		notIns = append(notIns, f.ID)
-	}
 
-	accounts, err := s.accountDao.PageAccount(notIns, &param)
-	if err != nil {
-		logrus.Errorf("[account|PageFindFriend] 发生错误, %s", err.Error())
-		result.ServerError(ctx)
-		return
-	}
-	result.Ok(ctx, s.transDTO(&accounts))
+	result.OkWithTotal(ctx, s.transDTO(&accounts), total)
 }
 
 // ApplyAddFriend 申请添加好友
@@ -202,20 +203,26 @@ func (s *Service) HandleAddFriend(ctx *gin.Context) {
 	result.Success(ctx)
 }
 
-// ListApplyFriend 待处理的申请
-func (s *Service) ListApplyFriend(ctx *gin.Context) {
+// PageApplyFriend 待处理的申请
+func (s *Service) PageApplyFriend(ctx *gin.Context) {
 	data := ctx.MustGet(model.CURR_USER)
 	currUser := data.(*model.AccountDTO)
-	logrus.Infof("[account|ListApplyFriend] 显示待处理的申请")
+	logrus.Infof("[account|PageApplyFriend] 显示待处理的申请")
+
+	var param = model.AccountFriendPageParam{}
+	if err := ctx.ShouldBindQuery(&param); err != nil {
+		result.Fail(ctx, "参数错误")
+		return
+	}
 
 	// 通过自己的id，查询 apple 表中的数据
-	friend, err := s.accountDao.ListApplyFriend(currUser.Id)
+	friend, total, err := s.accountDao.PageApplyFriend(currUser.Id, &param)
 	if err != nil {
 		logrus.Errorf("[account|PageApplyFriend] 发生错误, %s", err.Error())
 		result.ServerError(ctx)
 		return
 	}
-	result.Ok(ctx, s.transDTO(&friend))
+	result.OkWithTotal(ctx, s.transDTO(&friend), total)
 }
 
 // transDTO 转换为 DTO 返回

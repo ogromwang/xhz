@@ -23,11 +23,11 @@ func v1(r *gin.Engine, s *service.Service) {
 
 	// 用户相关
 	account.Use(Auth())
-	account.GET("", s.Account.Profile)
-	account.GET("friends", s.Account.ListMyFriend)
-	account.PUT("picture", s.Account.ProfilePicture)
+	account.GET("profile", s.Account.Profile)
+	account.GET("friends", s.Account.PageMyFriend)
+	account.PUT("profile/picture", s.Account.ProfilePicture)
 	account.GET("friends/find", s.Account.PageFindFriend)
-	account.GET("friends/apply", s.Account.ListApplyFriend)
+	account.GET("friends/apply", s.Account.PageApplyFriend)
 	account.POST("friends/apply", s.Account.ApplyAddFriend)
 	account.POST("friends/handle", s.Account.HandleAddFriend)
 

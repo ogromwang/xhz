@@ -27,15 +27,15 @@ func (d *Dao) RecordByFriends(param *model.RecordPageParam) (resp []*model.Recor
 
 	db := config.AllConn.Db.Debug().Table(record.TableName()).
 		Select(`
-			record_money.created_at as createdAt,
+			record_money.created_at,
 			record_money.id,
 			share, 
 			money, 
 			describe, 
 			image,
-			acc.id as accountId, 
+			acc.id as account_id, 
 			username, 
-			profile_picture as profilePicture`).
+			profile_picture`).
 		Where("share = true").
 		Joins("left join account acc on acc.id = record_money.account_id").
 		Order(fmt.Sprintf("%s.created_at DESC", record.TableName())).
@@ -58,15 +58,15 @@ func (d *Dao) RecordByMe(param *model.RecordPageParam, uid uint) (resp []*model.
 
 	db := config.AllConn.Db.Debug().Table(record.TableName()).
 		Select(`
-			record_money.created_at as createdAt,
+			record_money.created_at,
 			record_money.id,
 			share, 
 			money, 
 			describe, 
 			image,
-			acc.id as accountId, 
+			acc.id as account_id, 
 			username, 
-			profile_picture as profilePicture`).
+			profile_picture`).
 		Joins("left join account acc on acc.id = record_money.account_id").
 		Where("acc.id = ?", uid).
 		Order(fmt.Sprintf("%s.created_at DESC", record.TableName())).

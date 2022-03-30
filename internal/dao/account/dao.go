@@ -27,6 +27,26 @@ func (d *Dao) UpdatePicture(uid uint, path string) (err error) {
 	return
 }
 
+func (d *Dao) PageFindAccount(currUid uint, param *model.AccountFriendPageParam) (resp []*model.Account, count int64, err error) {
+	subQuery := config.AllConn.Db.Table("account_friend").
+		Select("regexp_split_to_table(array_to_string(friend_ids, ','), ',')::int").
+		Where("account_id = ?", currUid)
+	db := config.AllConn.Db.Table("account").
+		Where("account.id != ?", currUid).
+		Where("account.id not in (?)", subQuery).
+		Where("account.username like concat(?, '%')", param.Username)
+
+	if err = db.Count(&count).Error; err != nil {
+		logrus.Errorf("[account|PageFindAccount] 分页查找account, err: [%+v]", err)
+		return
+	}
+	if err = db.Offset(int((param.Page - 1) * param.PageSize)).Limit(int(param.PageSize)).Find(&resp).Error; err != nil {
+		logrus.Errorf("[account|PageFindAccount] 分页查找account, err: [%+v]", err)
+		return
+	}
+	return
+}
+
 func (d *Dao) PageAccount(notIn []uint, param *model.AccountFriendPageParam) (resp []*model.Account, err error) {
 	resp = make([]*model.Account, 0)
 
@@ -51,24 +71,25 @@ func (d *Dao) PageAccount(notIn []uint, param *model.AccountFriendPageParam) (re
 	return
 }
 
-func (d *Dao) ListFriend(accountId uint) (resp []*model.Account, err error) {
-	accountFriend := model.AccountFriend{}
-	err = config.AllConn.Db.
-		Where("account_id = ?", accountId).
-		Select("friend_ids").
-		First(&accountFriend).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			err = nil
-			resp = make([]*model.Account, 0)
-			return
-		}
-		logrus.Errorf("[account|ListFriend] 发生错误, %s", err.Error())
+func (d *Dao) PageFriend(currUid uint, param *model.AccountFriendPageParam) (resp []*model.Account, count int64, err error) {
+	subQuery := config.AllConn.Db.Table("account_friend").
+		Select("regexp_split_to_table(array_to_string(friend_ids, ','), ',')::int").
+		Where("account_id = ?", currUid)
+	db := config.AllConn.Db.Table("account").
+		Where("account.id in (?)", subQuery)
+
+	search := strings.Trim(param.Username, " ")
+	if search != "" {
+		db = db.Where("account.username like concat(?, '%')", search)
+	}
+	if err = db.Count(&count).Error; err != nil {
+		logrus.Errorf("[account|PageFriend] 发生错误, %s", err.Error())
 		return
 	}
-	friendIds := []int64(accountFriend.FriendIds)
-
-	resp, err = d.List(friendIds)
+	if err = db.Offset(int((param.Page - 1) * param.PageSize)).Limit(int(param.PageSize)).Find(&resp).Error; err != nil {
+		logrus.Errorf("[account|PageFriend] 分页查找account, err: [%+v]", err)
+		return
+	}
 	return
 }
 
@@ -141,8 +162,8 @@ func (d *Dao) HandleAddFriend(friendId uint, yourId uint, status int) (err error
 
 	if err = tx.Debug().
 		Model(model.ApplyAccountFriend{}).
-		Where("account_id = ? and friend_id = ?", yourId, friendId).
 		Where("status = 0").
+		Where("(account_id = ? and friend_id = ?) or (account_id = ? and friend_id = ?)", yourId, friendId, friendId, yourId).
 		UpdateColumns(map[string]interface{}{"status": status}).
 		Error; err != nil {
 		tx.Rollback()
@@ -200,19 +221,20 @@ func (d *Dao) handleRelationship(tx *gorm.DB, yourId uint, friendId uint) (err e
 	return
 }
 
-// ListApplyFriend 好友申请列表
-func (d *Dao) ListApplyFriend(currId uint) (resp []*model.Account, err error) {
-	var poList = make([]*model.ApplyAccountFriend, 0)
-	if err = config.AllConn.Db.Debug().
-		Where("account_id = ? and status = 0", currId).
-		Find(&poList).Error; err != nil {
-		logrus.Errorf("[account|ApplyAddFriend] 发生错误, %s", err.Error())
+// PageApplyFriend 好友申请列表
+func (d *Dao) PageApplyFriend(currId uint, param *model.AccountFriendPageParam) (resp []*model.Account, count int64, err error) {
+	subQuery := config.AllConn.Db.Debug().Table("account_friend_apply as apply").
+		Select("friend_id").
+		Where("account_id = ? and status = 0", currId)
+	db := config.AllConn.Db.Debug().Table("account").Where("account.id in (?)", subQuery)
+
+	if err = db.Count(&count).Error; err != nil {
+		logrus.Errorf("[account|PageApplyFriend] 发生错误, %s", err.Error())
 		return
 	}
-	var ids = make([]int64, len(poList))
-	for _, apply := range poList {
-		ids = append(ids, int64(apply.FriendId))
+	if err = db.Offset(int((param.Page - 1) * param.PageSize)).Limit(int(param.PageSize)).Find(&resp).Error; err != nil {
+		logrus.Errorf("[account|PageApplyFriend] 分页查找account, err: [%+v]", err)
+		return
 	}
-	resp, err = d.List(ids)
 	return
 }
