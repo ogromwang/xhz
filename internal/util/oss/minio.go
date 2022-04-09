@@ -3,6 +3,7 @@ package oss
 import (
 	"fmt"
 	"os"
+	"xiaohuazhu/internal/util"
 
 	"github.com/gofrs/uuid"
 	"github.com/minio/minio-go"
@@ -25,7 +26,7 @@ func PushObject(path string, prefix string) (string, error) {
 func PushObjectByFile(f *os.File, prefix string) (string, error) {
 	// 文件名
 	uu, _ := uuid.NewV4()
-	fileName := fmt.Sprintf("%s_%s.jpg", prefix, uu.String())
+	fileName := fmt.Sprintf("%s_%s%s", prefix, uu.String(), util.GetFileExt(f.Name()))
 	// 上传图片
 	if _, err := config.AllConn.Oss.PutObject(
 		"image",

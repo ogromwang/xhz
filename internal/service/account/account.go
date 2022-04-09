@@ -3,9 +3,9 @@ package account
 import (
 	"os"
 	"strings"
+	"xiaohuazhu/internal/util"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
 
 	"xiaohuazhu/internal/config"
@@ -82,16 +82,19 @@ func (s *Service) ProfilePicture(ctx *gin.Context) {
 		result.Fail(ctx, "上传文件失败")
 		return
 	}
-	// 1mb
-	if file.Size > (1 << 20) {
-		logrus.Errorf("[account|ProfilePicture] 文件大小: %d", file.Size)
+
+	// 3mb
+	if file.Size > (3 << 20) {
+		logrus.Errorf("[account|ProfilePicture] 文件大小: %s", util.FormatFileSize(file.Size))
 		result.Fail(ctx, "文件大小超过限制")
 		return
 	}
-	uu, _ := uuid.NewV4()
-	temp, err := os.CreateTemp("", uu.String()+"*.png")
+	var temp *os.File
+	var compressTemp *os.File
+	temp, err = util.NewImgTempPath(util.GetFileExt(file.Filename))
+	compressTemp, err = util.NewImgTempPath(util.GetFileExt(file.Filename))
 	if err != nil {
-		logrus.Errorf("[account|ProfilePicture] 创建临时目录异常, %s", err.Error())
+		logrus.Errorf("[account|ProfilePicture] 创建临时目录异常")
 		result.ServerError(ctx)
 		return
 	}
@@ -104,8 +107,18 @@ func (s *Service) ProfilePicture(ctx *gin.Context) {
 		result.ServerError(ctx)
 		return
 	}
-	// 上传至 oss
-	path, err := oss.PushObjectByFile(temp, "picture")
+	// 压缩图片
+	defer os.Remove(compressTemp.Name())
+	defer compressTemp.Close()
+	err = util.ImgFileResize(temp, compressTemp, 200)
+	if err != nil {
+		logrus.Errorf("[account|ProfilePicture] 压缩图片时发生异常, err: [%s]", err.Error())
+		result.ServerError(ctx)
+		return
+	}
+
+	// 上传至 oss, 这里进行了压缩 io后，需要传递path重新读取？
+	path, err := oss.PushObject(compressTemp.Name(), "picture")
 	if err != nil {
 		logrus.Errorf("[account|ProfilePicture] OSS 上传头像失败: %s %s", temp.Name(), err.Error())
 		result.Fail(ctx, "上传头像失败，请联系管理员")
