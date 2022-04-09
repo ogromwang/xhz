@@ -6,6 +6,7 @@ import (
 	"strings"
 	"xiaohuazhu/internal/config"
 	"xiaohuazhu/internal/model"
+	"xiaohuazhu/internal/util"
 
 	"github.com/sirupsen/logrus"
 )
@@ -206,8 +207,16 @@ func (d *Dao) handleRelationship(tx *gorm.DB, yourId uint, friendId uint) (err e
 
 	// 修改
 	int64s := []int64(accountFriend.FriendIds)
+	if index := util.IntContains(int64s, int64(friendId)); index != -1 {
+		// 已经添加了
+		logrus.Warnf("[account|HandleAddFriend] 已经添加了")
+		return
+	}
+
 	int64s = append(int64s, int64(friendId))
-	_ = accountFriend.FriendIds.Scan(int64s)
+
+	newArray := pq.Int64Array(int64s)
+	accountFriend.FriendIds = newArray
 
 	if err = tx.Debug().
 		Model(accountFriend).

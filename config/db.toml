@@ -1,9 +1,9 @@
 [Db]
-    Dns = "host=172.16.68.10 user=writer password=123 dbname=xiaohuazhu port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+    Dns = "host=192.168.0.116 user=writer password=123 dbname=xiaohuazhu port=5432 sslmode=disable TimeZone=Asia/Shanghai"
     PreferSimpleProtocol = true
 
 [Oss]
-    Endpoint = "172.16.68.10:9000"
+    Endpoint = "192.168.0.116:9000"
     Id = "minio"
     Secret = "123456789"
     Token = ""
