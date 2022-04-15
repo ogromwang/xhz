@@ -20,11 +20,9 @@ func (m *RecordMoney) TableName() string {
 }
 
 type RecordMoneyDTO struct {
-	AccountId uint    `json:"accountId"`
-	Share     bool    `json:"share"`
-	Money     float32 `json:"money" binding:"required"`
-	Describe  string  `json:"describe"`
-	Image     string  `json:"image"`
+	Share    bool    `form:"share"`
+	Money    float32 `form:"money" binding:"required"`
+	Describe string  `form:"describe" binding:"required"`
 }
 
 type RecordPageParam struct {
