@@ -40,7 +40,7 @@ func (d *Dao) RecordByFriends(param *model.RecordPageParam) (resp []*model.Recor
 		Joins("left join account acc on acc.id = record_money.account_id").
 		Order(fmt.Sprintf("%s.created_at DESC", record.TableName())).
 		Offset(int((param.Page - 1) * param.PageSize)).
-		Limit(int(param.PageSize))
+		Limit(int(param.PageSize) + 1)
 
 	searchText := strings.Trim(param.SearchText, " ")
 	if searchText != "" {

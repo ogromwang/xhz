@@ -23,8 +23,7 @@ func NewService() *Service {
 	}
 }
 
-// Push
-// todo-ogromwang : (2022.03.29 17:29) [待增强]
+// Push push
 func (s *Service) Push(ctx *gin.Context) {
 	logrus.Infof("[recordMoney|Push] 开始新建记录")
 	data := ctx.MustGet(model.CURR_USER)
@@ -121,7 +120,13 @@ func (s *Service) RecordByFriends(ctx *gin.Context) {
 		result.ServerError(ctx)
 		return
 	}
-	result.Ok(ctx, records)
+
+	var hasMore bool
+	if len(records) > int(param.PageSize) {
+		hasMore = true
+		records = records[:param.PageSize]
+	}
+	result.OkWithMore(ctx, records, hasMore)
 }
 
 // RecordByMe ...
