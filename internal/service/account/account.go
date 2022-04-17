@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"xiaohuazhu/internal/config"
 	"xiaohuazhu/internal/dao/account"
 	"xiaohuazhu/internal/model"
 	"xiaohuazhu/internal/util/oss"
@@ -66,7 +65,7 @@ func (s *Service) Profile(ctx *gin.Context) {
 	result.Ok(ctx, model.AccountDTO{
 		Id:             user.ID,
 		Username:       user.Username,
-		ProfilePicture: config.AllConfig.Oss.Endpoint + "/" + user.ProfilePicture,
+		ProfilePicture: oss.GetUrlByProtocol(user.ProfilePicture),
 		CreateAt:       user.CreatedAt,
 	})
 }
@@ -245,7 +244,7 @@ func (s *Service) transDTO(accounts *[]*model.Account) []*model.AccountDTO {
 	for _, data := range *accounts {
 		pr = &model.AccountDTO{
 			Id:             data.ID,
-			ProfilePicture: config.AllConfig.Oss.Endpoint + "/" + data.ProfilePicture,
+			ProfilePicture: oss.GetUrlByProtocol(data.ProfilePicture),
 			Username:       data.Username,
 			CreateAt:       data.CreatedAt,
 		}

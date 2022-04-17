@@ -22,7 +22,7 @@ func (d *Dao) Add(account *model.RecordMoney) (err error) {
 	return
 }
 
-func (d *Dao) RecordByFriends(param *model.RecordPageParam) (resp []*model.RecordPageDTO, err error) {
+func (d *Dao) RecordByFriends(param *model.RecordPageParam, currUser *model.AccountDTO) (resp []*model.RecordPageDTO, err error) {
 	record := model.RecordMoney{}
 
 	db := config.AllConn.Db.Debug().Table(record.TableName()).
@@ -36,7 +36,7 @@ func (d *Dao) RecordByFriends(param *model.RecordPageParam) (resp []*model.Recor
 			acc.id as account_id, 
 			username, 
 			profile_picture`).
-		Where("share = true").
+		Where("share = true OR account_id = ?", currUser.Id).
 		Joins("left join account acc on acc.id = record_money.account_id").
 		Order(fmt.Sprintf("%s.created_at DESC", record.TableName())).
 		Offset(int((param.Page - 1) * param.PageSize)).

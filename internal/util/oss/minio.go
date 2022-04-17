@@ -12,6 +12,10 @@ import (
 	"xiaohuazhu/internal/config"
 )
 
+func GetUrlByProtocol(uri string) string {
+	return config.AllConfig.Oss.Protocol + config.AllConfig.Oss.Endpoint + "/" + uri
+}
+
 func PushObject(path string, prefix string) (string, error) {
 	// path
 	f, err := os.Open(path)

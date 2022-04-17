@@ -31,6 +31,7 @@ type Db struct {
 
 type Oss struct {
 	Endpoint string
+	Protocol string
 	Id       string
 	Secret   string
 	Token    string

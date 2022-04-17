@@ -3,7 +3,6 @@ package record
 import (
 	"github.com/gin-gonic/gin/binding"
 	"os"
-	"xiaohuazhu/internal/config"
 	"xiaohuazhu/internal/dao/record"
 	"xiaohuazhu/internal/model"
 	"xiaohuazhu/internal/util"
@@ -109,13 +108,17 @@ func (s *Service) Push(ctx *gin.Context) {
 // RecordByFriends ...
 func (s *Service) RecordByFriends(ctx *gin.Context) {
 	logrus.Infof("[record|RecordByFriends] 查询记录")
+
+	data := ctx.MustGet(model.CURR_USER)
+	currUser := data.(*model.AccountDTO)
+
 	var param = model.RecordPageParam{}
 	if err := ctx.ShouldBindQuery(&param); err != nil {
 		result.Fail(ctx, "参数错误")
 		return
 	}
 	// 需要关联查询 record + account
-	records, err := s.recordDao.RecordByFriends(&param)
+	records, err := s.recordDao.RecordByFriends(&param, currUser)
 	if err != nil {
 		logrus.Errorf("[record|RecordByFriends] DB 查询错误, %s", err.Error())
 		result.ServerError(ctx)
@@ -129,8 +132,8 @@ func (s *Service) RecordByFriends(ctx *gin.Context) {
 	}
 
 	for _, dto := range records {
-		dto.ProfilePicture = config.AllConfig.Oss.Endpoint + "/" + dto.ProfilePicture
-		dto.Image = config.AllConfig.Oss.Endpoint + "/" + dto.Image
+		dto.ProfilePicture = oss.GetUrlByProtocol(dto.ProfilePicture)
+		dto.Image = oss.GetUrlByProtocol(dto.Image)
 
 	}
 	result.OkWithMore(ctx, records, hasMore)

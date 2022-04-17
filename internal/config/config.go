@@ -65,6 +65,7 @@ func initMinio(err error) {
 	})
 	if err != nil {
 		logrus.Errorf("初始化minio 失败, err: %s", err.Error())
+		panic("初始化minio 失败")
 	}
 	logrus.Infof("初始化 minio client 成功")
 
