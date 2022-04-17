@@ -3,6 +3,7 @@ package record
 import (
 	"github.com/gin-gonic/gin/binding"
 	"os"
+	"xiaohuazhu/internal/config"
 	"xiaohuazhu/internal/dao/record"
 	"xiaohuazhu/internal/model"
 	"xiaohuazhu/internal/util"
@@ -125,6 +126,12 @@ func (s *Service) RecordByFriends(ctx *gin.Context) {
 	if len(records) > int(param.PageSize) {
 		hasMore = true
 		records = records[:param.PageSize]
+	}
+
+	for _, dto := range records {
+		dto.ProfilePicture = config.AllConfig.Oss.Endpoint + "/" + dto.ProfilePicture
+		dto.Image = config.AllConfig.Oss.Endpoint + "/" + dto.Image
+
 	}
 	result.OkWithMore(ctx, records, hasMore)
 }
