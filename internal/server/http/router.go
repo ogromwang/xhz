@@ -37,4 +37,10 @@ func v1(r *gin.Engine, s *service.Service) {
 	record.POST("", s.Record.Push)
 	record.GET("me", s.Record.RecordByMe)
 	record.GET("all", s.Record.RecordByFriends)
+
+	// 目标相关
+	goal := routerGroup.Group("goal")
+	goal.Use(Auth())
+	record.GET("", s.Goal.Get)
+	record.POST("", s.Goal.Set)
 }
