@@ -157,5 +157,17 @@ func (s *Service) RecordByMe(ctx *gin.Context) {
 		result.ServerError(ctx)
 		return
 	}
-	result.Ok(ctx, records)
+
+	var hasMore bool
+	if len(records) > int(param.PageSize) {
+		hasMore = true
+		records = records[:param.PageSize]
+	}
+
+	for _, dto := range records {
+		dto.ProfilePicture = oss.GetUrlByProtocol(dto.ProfilePicture)
+		dto.Image = oss.GetUrlByProtocol(dto.Image)
+
+	}
+	result.OkWithMore(ctx, records, hasMore)
 }
