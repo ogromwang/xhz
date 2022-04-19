@@ -43,6 +43,7 @@ func (s *Service) Set(ctx *gin.Context) {
 	var param = model.GoalSetDTO{}
 	if err := ctx.ShouldBindJSON(&param); err != nil {
 		result.Fail(ctx, "参数错误")
+		logrus.Errorf("[goal|Set] 参数错误 %s", err.Error())
 		return
 	}
 
@@ -53,6 +54,32 @@ func (s *Service) Set(ctx *gin.Context) {
 	}
 	if !set {
 		result.Fail(ctx, "更新失败")
+		return
+	}
+
+	result.Success(ctx)
+}
+
+// Create 创建目标
+func (s *Service) Create(ctx *gin.Context) {
+	logrus.Infof("[goal|Create] 修改目标值")
+	data := ctx.MustGet(model.CURR_USER)
+	currUser := data.(*model.AccountDTO)
+
+	var param = model.GoalCreateDTO{}
+	if err := ctx.ShouldBindJSON(&param); err != nil {
+		result.Fail(ctx, "参数错误")
+		logrus.Errorf("[goal|Create] 参数错误 %s", err.Error())
+		return
+	}
+
+	set, err := s.goalDao.Create(ctx, &param, currUser.Id)
+	if err != nil {
+		result.ServerError(ctx)
+		return
+	}
+	if !set {
+		result.Fail(ctx, "创建失败")
 		return
 	}
 

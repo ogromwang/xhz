@@ -18,7 +18,13 @@ func (m *Goal) TableName() string {
 }
 
 type GoalSetDTO struct {
-	Id    uint    `json:"id"`
+	Id         uint    `json:"id"  binding:"required"`
+	Money      float32 `json:"money" binding:"required"`
+	AccountIds []int64 `json:"account_ids" binding:"required"`
+	Type       int     `json:"type" binding:"required"`
+}
+
+type GoalCreateDTO struct {
 	Money float32 `json:"money" binding:"required"`
 	Type  int     `json:"type" binding:"required"`
 }
@@ -28,4 +34,5 @@ type GoalGetDTO struct {
 	CurrMoney  float32
 	TotalMoney float32
 	Type       int
+	AccountIds []int64
 }

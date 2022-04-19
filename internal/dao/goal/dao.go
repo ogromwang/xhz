@@ -1,8 +1,8 @@
 package goal
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -43,6 +43,7 @@ func (d *Dao) Get(ctx *gin.Context, currId uint) (list []*model.GoalGetDTO, err 
 			oneGoal, _ := d.getOneGoal(ctx, currId, g.ID)
 			ptr := &model.GoalGetDTO{
 				Id:         g.ID,
+				AccountIds: []int64(g.AccountIds),
 				CurrMoney:  g.Money,
 				TotalMoney: oneGoal,
 				Type:       g.Type,
@@ -82,51 +83,101 @@ func (d *Dao) getOneGoal(_ *gin.Context, currId uint, goalId uint) (total float3
 	return
 }
 
+func (d *Dao) findGoal(leaderId uint, typ int, goalId uint) ([]*model.Goal, error) {
+	var poList = make([]*model.Goal, 0)
+	// 小组
+	// 先查询是否存在记录 | 是否是leader，不然不能修改
+	db := config.AllConn.Db
+	if goalId != 0 {
+		db.Where("id = ?", goalId)
+	} else {
+		db.Where("leader = ? and type = ?", leaderId, typ)
+	}
+
+	if err := db.Find(&poList).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			logrus.Errorf("[goal|findGoal] 没有找到消息或者没有权限, %s", err.Error())
+			return nil, nil
+		}
+		logrus.Errorf("[goal|findGoal] 数据库错误, %s", err.Error())
+		return nil, err
+	}
+	return poList, nil
+}
+
 func (d *Dao) Set(_ *gin.Context, g *model.GoalSetDTO, currId uint) (success bool, err error) {
-	if g.Type == 1 {
-		// 个人
-		// 新增 | 修改
-		create := model.Goal{
-			AccountIds: pq.Int64Array([]int64{int64(currId)}),
-			Leader:     currId,
-			Money:      g.Money,
-			Type:       g.Type,
-		}
-		if err = config.AllConn.Db.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "leader"}, {Name: "type"}},
-			DoUpdates: clause.AssignmentColumns([]string{"money"}),
-		}).Create(&create).Error; err != nil {
-			logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
-			return
-		}
+	var list = make([]*model.Goal, 0)
+	// 通过主键直接拉
+	if list, err = d.findGoal(currId, g.Type, g.Id); err != nil {
+		logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
+		return
+	}
+	if len(list) != 1 {
+		err = fmt.Errorf("没有发现记录")
+		return
+	}
 
-	} else if g.Type == 2 {
-		if g.Id == 0 {
-			return
-		}
+	if err = d.saveUpdate(list[0].ID, currId, &model.Goal{
+		Money:      g.Money,
+		Type:       g.Type,
+		AccountIds: g.AccountIds,
+	}); err != nil {
+		logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
+		return
+	}
 
-		var po = model.Goal{}
-		// 小组
-		// 先查询是否存在记录 | 是否是leader，不然不能修改
-		if err = config.AllConn.Db.
-			Where("leader = ? and type = 2", currId).
-			Where("id = ?", g.Id).
-			First(&po).
-			Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				logrus.Errorf("[goal|Set] 没有找到消息或者没有权限, %s", err.Error())
-				err = nil
-				return
-			}
-			logrus.Errorf("[goal|Set] 数据库错误, %s", err.Error())
-		}
+	success = true
+	return
+}
 
-		po.Money = g.Money
-		if err = config.AllConn.Db.Save(&po).Error; err != nil {
-			logrus.Errorf("[goal|Set] 数据库错误, %s", err.Error())
-			return
-		}
+func (d *Dao) saveUpdate(id uint, currId uint, g *model.Goal) error {
+	var err error
 
+	// 新增、修改
+	create := model.Goal{
+		Model: gorm.Model{
+			ID: id,
+		},
+		AccountIds: g.AccountIds,
+		Leader:     currId,
+		Money:      g.Money,
+		Type:       g.Type,
+	}
+	if err = config.AllConn.Db.Debug().Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"money"}),
+	}).Create(&create).Error; err != nil {
+		logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+func (d *Dao) Create(_ *gin.Context, g *model.GoalCreateDTO, currId uint) (success bool, err error) {
+	// type = 1 只能有一条记录
+	// type = 2 一个人只能加入2个目标
+
+	goalList := make([]*model.Goal, 0)
+	goalList, err = d.findGoal(currId, g.Type, 0)
+
+	if g.Type == 1 && len(goalList) != 0 {
+		// 不能创建
+		return
+	}
+
+	if g.Type == 2 && len(goalList) >= 2 {
+		// 不能创建
+		return
+	}
+
+	if err = d.saveUpdate(0, currId, &model.Goal{
+		AccountIds: []int64{},
+		Leader:     currId,
+		Money:      g.Money,
+		Type:       g.Type,
+	}); err != nil {
+		logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
+		return
 	}
 
 	success = true
