@@ -35,8 +35,10 @@ func (d *Dao) Get(ctx *gin.Context, currId uint) (list []*model.GoalGetDTO, err 
 		return
 	}
 
+	group := sync.WaitGroup{}
 	lock := sync.Mutex{}
 	for _, goal := range poList {
+		group.Add(1)
 		go func(g *model.Goal) {
 			oneGoal, _ := d.getOneGoal(ctx, currId, g.ID)
 			ptr := &model.GoalGetDTO{
@@ -49,9 +51,12 @@ func (d *Dao) Get(ctx *gin.Context, currId uint) (list []*model.GoalGetDTO, err 
 			lock.Lock()
 			list = append(list, ptr)
 			lock.Unlock()
+			group.Done()
 
 		}(goal)
 	}
+
+	group.Wait()
 	return
 }
 
@@ -60,25 +65,20 @@ func (d *Dao) getOneGoal(_ *gin.Context, currId uint, goalId uint) (total float3
 	month := time.Now().Format("01")
 
 	subQuery := config.AllConn.Db.Table("goal").
-		Select("regexp_split_to_table(array_to_string(friend_ids, ','), ',')::int").
+		Select("regexp_split_to_table(array_to_string(account_ids, ','), ',')::int").
 		Where("account_id = ?", currId).
 		Where("id = ?", goalId)
 	db := config.AllConn.Db.Table("record_money").
 		Select("sum(money) as total").
-		Where("account.id in (?)", subQuery).
+		Where("account_id in (?)", subQuery).
 		Where("date_part('year', created_at) = ?", year).
 		Where("date_part('month', created_at) = ?", month).
 		Group("date_part('month', created_at)")
 
-	var res = struct {
-		total float32
-	}{}
-
-	if err = db.Scan(&res).Error; err != nil {
+	if err = db.Debug().Scan(&total).Error; err != nil {
 		return
 	}
-
-	total = res.total
+	logrus.Infof("值为: %v", total)
 	return
 }
 
