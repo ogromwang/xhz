@@ -53,6 +53,14 @@ func Fail(ctx *gin.Context, resp string) {
 	})
 }
 
+func NoAuth(ctx *gin.Context, resp string) {
+	ctx.JSON(200, model.Result{
+		Code:  400,
+		Data:  nil,
+		Error: resp,
+	})
+}
+
 func ServerError(ctx *gin.Context) {
 	ctx.JSON(200, model.Result{
 		Code:  505,

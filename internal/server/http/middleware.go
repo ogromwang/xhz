@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"xiaohuazhu/internal/model"
@@ -20,6 +21,12 @@ func Auth() func(ctx *gin.Context) {
 		dto, err := auth.ParseToken(token)
 		if err != nil {
 			logrus.Errorf("解析 token 失败, token: [%s], err: [%+v]", token, err)
+			if validationError, ok := err.(*jwt.ValidationError); ok && validationError.Errors == jwt.ValidationErrorExpired {
+				result.NoAuth(ctx, "请重新登录")
+				ctx.Abort()
+				return
+			}
+
 			result.Fail(ctx, "没有访问权限")
 			ctx.Abort()
 			return
