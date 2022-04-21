@@ -9,7 +9,7 @@ import (
 )
 
 func GenerateToken(dto *model.AccountDTO) (string, error) {
-	expireTime := time.Now().Add(time.Duration(config.AllConfig.Application.Auth.JwtExpireHour) * time.Minute)
+	expireTime := time.Now().Add(time.Duration(config.AllConfig.Application.Auth.JwtExpireHour) * time.Hour)
 
 	claims := model.JwtClaims{
 		ID:             int64(dto.Id),

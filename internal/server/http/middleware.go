@@ -22,7 +22,7 @@ func Auth() func(ctx *gin.Context) {
 		if err != nil {
 			logrus.Errorf("解析 token 失败, token: [%s], err: [%+v]", token, err)
 			if validationError, ok := err.(*jwt.ValidationError); ok && validationError.Errors == jwt.ValidationErrorExpired {
-				result.NoAuth(ctx, "请重新登录")
+				result.NoAuth(ctx, "会话已过期, 请重新登录")
 				ctx.Abort()
 				return
 			}
