@@ -3,6 +3,7 @@ package account
 import (
 	"os"
 	"strings"
+	"xiaohuazhu/internal/dao/goal"
 	"xiaohuazhu/internal/util"
 
 	"github.com/gin-gonic/gin"
@@ -16,11 +17,13 @@ import (
 
 type Service struct {
 	accountDao *account.Dao
+	goalDao    *goal.Dao
 }
 
 func NewService() *Service {
 	return &Service{
 		accountDao: account.New(),
+		goalDao:    goal.New(),
 	}
 }
 

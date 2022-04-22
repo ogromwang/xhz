@@ -24,13 +24,13 @@ func (d *Dao) Add(account *model.RecordMoney) (err error) {
 	return
 }
 
-func (d *Dao) Get(ctx *gin.Context, currId uint) (list []*model.GoalGetDTO, err error) {
+func (d *Dao) List(ctx *gin.Context, currId uint) (list []*model.GoalGetDTO, err error) {
 	// 获取当前 currId 的所有 目标
 	poList := make([]*model.Goal, 0)
 	list = make([]*model.GoalGetDTO, 0)
 
 	// 小组
-	if err = config.AllConn.Db.Table("goal").Where("? = any (account_ids)", currId).Find(&poList).Error; err != nil {
+	if err = config.AllConn.Db.Debug().Table("goal").Where("? = any (account_ids)", currId).Find(&poList).Error; err != nil {
 		logrus.Errorf("[goal|Set] 数据库错误, %s", err.Error())
 		return
 	}
@@ -44,8 +44,8 @@ func (d *Dao) Get(ctx *gin.Context, currId uint) (list []*model.GoalGetDTO, err 
 			ptr := &model.GoalGetDTO{
 				Id:         g.ID,
 				AccountIds: []int64(g.AccountIds),
-				CurrMoney:  g.Money,
-				TotalMoney: oneGoal,
+				Goal:       g.Money,
+				CurrMoney:  oneGoal,
 				Type:       g.Type,
 			}
 
@@ -89,9 +89,9 @@ func (d *Dao) findGoal(leaderId uint, typ int, goalId uint) ([]*model.Goal, erro
 	// 先查询是否存在记录 | 是否是leader，不然不能修改
 	db := config.AllConn.Db
 	if goalId != 0 {
-		db.Where("id = ?", goalId)
+		db = db.Where("id = ?", goalId)
 	} else {
-		db.Where("leader = ? and type = ?", leaderId, typ)
+		db = db.Where("leader = ? and type = ?", leaderId, typ)
 	}
 
 	if err := db.Find(&poList).Error; err != nil {
@@ -121,7 +121,7 @@ func (d *Dao) Set(_ *gin.Context, g *model.GoalSetDTO, currId uint) (success boo
 		Money:      g.Money,
 		Type:       g.Type,
 		AccountIds: g.AccountIds,
-	}); err != nil {
+	}, config.AllConn.Db); err != nil {
 		logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
 		return
 	}
@@ -130,7 +130,7 @@ func (d *Dao) Set(_ *gin.Context, g *model.GoalSetDTO, currId uint) (success boo
 	return
 }
 
-func (d *Dao) saveUpdate(id uint, currId uint, g *model.Goal) error {
+func (d *Dao) saveUpdate(id uint, currId uint, g *model.Goal, db *gorm.DB) error {
 	var err error
 
 	// 新增、修改
@@ -143,7 +143,7 @@ func (d *Dao) saveUpdate(id uint, currId uint, g *model.Goal) error {
 		Money:      g.Money,
 		Type:       g.Type,
 	}
-	if err = config.AllConn.Db.Debug().Clauses(clause.OnConflict{
+	if err = db.Debug().Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"money"}),
 	}).Create(&create).Error; err != nil {
@@ -153,7 +153,7 @@ func (d *Dao) saveUpdate(id uint, currId uint, g *model.Goal) error {
 	return nil
 }
 
-func (d *Dao) Create(_ *gin.Context, g *model.GoalCreateDTO, currId uint) (success bool, err error) {
+func (d *Dao) Create(_ *gin.Context, g *model.GoalCreateDTO, currId uint, db *gorm.DB) (success bool, err error) {
 	// type = 1 只能有一条记录
 	// type = 2 一个人只能加入2个目标
 
@@ -171,11 +171,11 @@ func (d *Dao) Create(_ *gin.Context, g *model.GoalCreateDTO, currId uint) (succe
 	}
 
 	if err = d.saveUpdate(0, currId, &model.Goal{
-		AccountIds: []int64{},
+		AccountIds: []int64{int64(currId)},
 		Leader:     currId,
 		Money:      g.Money,
 		Type:       g.Type,
-	}); err != nil {
+	}, db); err != nil {
 		logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
 		return
 	}

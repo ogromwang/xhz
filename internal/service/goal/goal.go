@@ -1,6 +1,7 @@
 package goal
 
 import (
+	"xiaohuazhu/internal/config"
 	"xiaohuazhu/internal/dao/goal"
 	"xiaohuazhu/internal/model"
 	"xiaohuazhu/internal/util/result"
@@ -19,13 +20,13 @@ func NewService() *Service {
 	}
 }
 
-// Get 获取目标
-func (s *Service) Get(ctx *gin.Context) {
+// List 获取目标
+func (s *Service) List(ctx *gin.Context) {
 	logrus.Infof("[goal|Set] 获取当前目标值")
 	data := ctx.MustGet(model.CURR_USER)
 	currUser := data.(*model.AccountDTO)
 
-	list, err := s.goalDao.Get(ctx, currUser.Id)
+	list, err := s.goalDao.List(ctx, currUser.Id)
 	if err != nil {
 		result.ServerError(ctx)
 		return
@@ -73,7 +74,7 @@ func (s *Service) Create(ctx *gin.Context) {
 		return
 	}
 
-	set, err := s.goalDao.Create(ctx, &param, currUser.Id)
+	set, err := s.goalDao.Create(ctx, &param, currUser.Id, config.AllConn.Db)
 	if err != nil {
 		result.ServerError(ctx)
 		return

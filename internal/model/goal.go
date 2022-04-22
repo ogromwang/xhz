@@ -25,14 +25,15 @@ type GoalSetDTO struct {
 }
 
 type GoalCreateDTO struct {
+	Name  string  `json:"Name" binding:"required"`
 	Money float32 `json:"money" binding:"required"`
 	Type  int     `json:"type" binding:"required"`
 }
 
 type GoalGetDTO struct {
 	Id         uint
+	Goal       float32
 	CurrMoney  float32
-	TotalMoney float32
 	Type       int
 	AccountIds []int64
 }

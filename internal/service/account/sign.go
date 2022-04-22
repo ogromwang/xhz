@@ -47,11 +47,26 @@ func (s *Service) SignUp(ctx *gin.Context) {
 		ProfilePicture: "image/test1.jpg",
 	}
 	// 保存
-	if err := s.accountDao.Add(&po); err != nil {
+	begin := config.AllConn.Db.Begin()
+	if err = s.accountDao.Add(&po, begin); err != nil {
+		begin.Rollback()
 		logrus.Errorf("[account|SignUp] 注册异常, err: [%+v]", err)
 		result.Fail(ctx, err.Error())
 		return
 	}
+
+	// 设置个人目标
+	if _, err = s.goalDao.Create(ctx, &model.GoalCreateDTO{
+		Name:  "个人目标",
+		Money: 1000,
+		Type:  1,
+	}, po.ID, begin); err != nil {
+		begin.Rollback()
+		logrus.Errorf("[account|SignUp] 注册异常, err: [%+v]", err)
+		result.Fail(ctx, err.Error())
+	}
+
+	begin.Commit()
 	logrus.Infof("用户: [%s] 注册成功", param.Username)
 	result.Success(ctx)
 }

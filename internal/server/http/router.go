@@ -41,6 +41,6 @@ func v1(r *gin.Engine, s *service.Service) {
 	// 目标相关
 	goal := routerGroup.Group("goal")
 	goal.Use(Auth())
-	goal.GET("", s.Goal.Get)
+	goal.GET("", s.Goal.List)
 	goal.POST("", s.Goal.Set)
 }

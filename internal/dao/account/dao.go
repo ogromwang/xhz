@@ -106,8 +106,8 @@ func (d *Dao) List(accountIds []int64) (resp []*model.Account, err error) {
 	return
 }
 
-func (d *Dao) Add(account *model.Account) (err error) {
-	err = config.AllConn.Db.Save(account).Error
+func (d *Dao) Add(account *model.Account, db *gorm.DB) (err error) {
+	err = db.Create(account).Error
 	return
 }
 
