@@ -43,6 +43,7 @@ func (d *Dao) List(ctx *gin.Context, currId uint) (list []*model.GoalGetDTO, err
 			oneGoal, _ := d.getOneGoal(ctx, currId, g.ID)
 			ptr := &model.GoalGetDTO{
 				Id:         g.ID,
+				Name:       g.Name,
 				AccountIds: []int64(g.AccountIds),
 				Goal:       g.Money,
 				CurrMoney:  oneGoal,
@@ -142,10 +143,11 @@ func (d *Dao) saveUpdate(id uint, currId uint, g *model.Goal, db *gorm.DB) error
 		Leader:     currId,
 		Money:      g.Money,
 		Type:       g.Type,
+		Name:       g.Name,
 	}
 	if err = db.Debug().Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"money"}),
+		DoUpdates: clause.AssignmentColumns([]string{"money", "name"}),
 	}).Create(&create).Error; err != nil {
 		logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
 		return err
@@ -175,6 +177,7 @@ func (d *Dao) Create(_ *gin.Context, g *model.GoalCreateDTO, currId uint, db *go
 		Leader:     currId,
 		Money:      g.Money,
 		Type:       g.Type,
+		Name:       g.Name,
 	}, db); err != nil {
 		logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
 		return

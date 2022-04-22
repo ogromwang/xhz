@@ -7,6 +7,7 @@ import (
 
 type Goal struct {
 	gorm.Model
+	Name       string        `json:"name"`
 	AccountIds pq.Int64Array `json:"account_ids" gorm:"type:int[]"`
 	Leader     uint          `json:"leader"`
 	Money      float32       `json:"money"`
@@ -22,6 +23,7 @@ type GoalSetDTO struct {
 	Money      float32 `json:"money" binding:"required"`
 	AccountIds []int64 `json:"account_ids" binding:"required"`
 	Type       int     `json:"type" binding:"required"`
+	Name       string  `json:"name"`
 }
 
 type GoalCreateDTO struct {
@@ -32,6 +34,7 @@ type GoalCreateDTO struct {
 
 type GoalGetDTO struct {
 	Id         uint
+	Name       string
 	Goal       float32
 	CurrMoney  float32
 	Type       int
