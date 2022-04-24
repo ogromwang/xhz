@@ -13,7 +13,7 @@ import (
 )
 
 func GetUrlByProtocol(uri string) string {
-	return config.AllConfig.Oss.Protocol + config.AllConfig.Oss.Endpoint + "/" + uri
+	return config.AllConfig.Oss.AccessPrefix + uri
 }
 
 func PushObject(path string, prefix string) (string, error) {
