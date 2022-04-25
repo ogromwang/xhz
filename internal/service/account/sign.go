@@ -44,7 +44,7 @@ func (s *Service) SignUp(ctx *gin.Context) {
 		Username: param.Username,
 		Password: string(hash),
 		// 给一个默认icon
-		ProfilePicture: "image/test1.jpg",
+		ProfilePicture: config.AllConfig.Application.DefaultIcon,
 	}
 	// 保存
 	begin := config.AllConn.Db.Begin()

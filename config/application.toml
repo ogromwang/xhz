@@ -1,6 +1,7 @@
 [Application]
     Name = "xiaohuazhu"
     Port = "8080"
+    DefaultIcon = "image/picture_b27918ac-b14c-47b8-a93f-f07ccd122aa3.jpg"
 
 [Application.Auth]
     PasswordSalt = "_jiangjiang"

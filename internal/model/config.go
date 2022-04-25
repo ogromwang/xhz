@@ -13,9 +13,10 @@ type Config struct {
 }
 
 type Application struct {
-	Name string
-	Port string
-	Auth *Auth
+	Name        string
+	Port        string
+	DefaultIcon string
+	Auth        *Auth
 }
 
 type Auth struct {
