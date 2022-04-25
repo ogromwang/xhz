@@ -2,6 +2,7 @@ package record
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -24,6 +25,20 @@ func (d *Dao) Add(account *model.RecordMoney) (err error) {
 
 func (d *Dao) RecordByFriends(param *model.RecordPageParam, currUser *model.AccountDTO) (resp []*model.RecordPageDTO, err error) {
 	record := model.RecordMoney{}
+	friend := model.AccountFriend{}
+	if err = config.AllConn.Db.Debug().
+		Select("friend_ids").
+		Where("account_id = ?", currUser.Id).
+		First(&friend).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		} else {
+			logrus.Errorf("[record|RecordByFriends] DB查询异常, %s", err.Error())
+			return
+		}
+	}
+	friendArr := []int64(friend.FriendIds)
+	friendArr = append(friendArr, int64(currUser.Id))
 
 	db := config.AllConn.Db.Debug().Table(record.TableName()).
 		Select(`
@@ -36,7 +51,7 @@ func (d *Dao) RecordByFriends(param *model.RecordPageParam, currUser *model.Acco
 			acc.id as account_id, 
 			username, 
 			profile_picture`).
-		Where("share = true OR account_id = ?", currUser.Id).
+		Where("(share = true And account_id in (?)) OR account_id = ?", friendArr, currUser.Id).
 		Joins("left join account acc on acc.id = record_money.account_id").
 		Order(fmt.Sprintf("%s.created_at DESC", record.TableName())).
 		Offset(int((param.Page - 1) * param.PageSize)).
