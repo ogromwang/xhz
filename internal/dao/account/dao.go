@@ -35,7 +35,7 @@ func (d *Dao) PageFindAccount(currUid uint, param *model.AccountFriendPageParam)
 	db := config.AllConn.Db.Table("account").
 		Where("account.id != ?", currUid).
 		Where("account.id not in (?)", subQuery).
-		Where("account.username like concat(?, '%')", param.Username)
+		Where("account.username = ?", param.Username)
 
 	if err = db.Count(&count).Error; err != nil {
 		logrus.Errorf("[account|PageFindAccount] 分页查找account, err: [%+v]", err)
