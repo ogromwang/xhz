@@ -122,6 +122,7 @@ func (d *Dao) Set(_ *gin.Context, g *model.GoalSetDTO, currId uint) (success boo
 		Money:      g.Money,
 		Type:       g.Type,
 		AccountIds: g.AccountIds,
+		Name:       list[0].Name,
 	}, config.AllConn.Db); err != nil {
 		logrus.Errorf("[goal|Set] DB写入异常, %s", err.Error())
 		return
