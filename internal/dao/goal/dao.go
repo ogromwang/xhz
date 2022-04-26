@@ -62,7 +62,7 @@ func (d *Dao) List(ctx *gin.Context, currId uint) (list []*model.GoalGetDTO, err
 	return
 }
 
-func (d *Dao) getOneGoal(_ *gin.Context, currId uint, goalId uint) (total float32, err error) {
+func (d *Dao) getOneGoal(_ *gin.Context, currId uint, goalId uint) (total float64, err error) {
 	year := time.Now().Year()
 	month := time.Now().Format("01")
 

@@ -10,7 +10,7 @@ type RecordMoney struct {
 	gorm.Model
 	AccountId uint
 	Share     bool
-	Money     float32
+	Money     float64
 	Describe  string
 	Image     string
 }
@@ -21,7 +21,7 @@ func (m *RecordMoney) TableName() string {
 
 type RecordMoneyDTO struct {
 	Share    bool    `form:"share"`
-	Money    float32 `form:"money" binding:"required"`
+	Money    float64 `form:"money" binding:"required"`
 	Describe string  `form:"describe" binding:"required"`
 }
 
