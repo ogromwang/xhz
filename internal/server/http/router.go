@@ -35,6 +35,7 @@ func v1(r *gin.Engine, s *service.Service) {
 	record := routerGroup.Group("record")
 	record.Use(Auth())
 	record.POST("", s.Record.Push)
+	record.DELETE("", s.Record.Delete)
 	record.GET("me", s.Record.RecordByMe)
 	record.GET("all", s.Record.RecordByFriends)
 

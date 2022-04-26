@@ -171,3 +171,35 @@ func (s *Service) RecordByMe(ctx *gin.Context) {
 	}
 	result.OkWithMore(ctx, records, hasMore)
 }
+
+func (s *Service) Delete(ctx *gin.Context) {
+	logrus.Infof("[record|Delete] 删除个人记录")
+	data := ctx.MustGet(model.CURR_USER)
+	currUser := data.(*model.AccountDTO)
+
+	var param = model.RecordDeleteParam{}
+	if err := ctx.ShouldBindJSON(&param); err != nil {
+		result.Fail(ctx, "参数错误")
+		return
+	}
+
+	// 直接删除，该记录，和照片
+	deleteRecord, err := s.recordDao.Delete(&param, currUser)
+	if err != nil {
+		logrus.Errorf("[record|Delete] 删除失败, %s", err.Error())
+		result.Fail(ctx, "操作失败")
+		return
+	}
+	// 删除 文件
+	go func() {
+		defer func() {
+			if re := recover(); re != nil {
+				logrus.Errorf("[record|Delete] 删除 OSS 失败, %v", re)
+			}
+		}()
+
+		_ = oss.DeleteObject(deleteRecord.Image)
+	}()
+
+	result.Success(ctx)
+}

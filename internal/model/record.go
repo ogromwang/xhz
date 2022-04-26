@@ -31,6 +31,10 @@ type RecordPageParam struct {
 	SearchText string `json:"searchText" form:"searchText"`
 }
 
+type RecordDeleteParam struct {
+	Id uint `json:"id" binding:"required"`
+}
+
 type RecordPageDTO struct {
 	CreatedAt      time.Time `json:"createdAt"`
 	Id             uint      `json:"id"`

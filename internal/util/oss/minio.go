@@ -3,6 +3,7 @@ package oss
 import (
 	"fmt"
 	"os"
+	"strings"
 	"xiaohuazhu/internal/util"
 
 	"github.com/gofrs/uuid"
@@ -14,6 +15,17 @@ import (
 
 func GetUrlByProtocol(uri string) string {
 	return config.AllConfig.Oss.AccessPrefix + uri
+}
+
+func DeleteObject(path string) error {
+	objectName := strings.Replace(path, "image/", "", 1)
+	if err := config.AllConn.Oss.RemoveObject("image", objectName); err != nil {
+		logrus.Errorf("minio removeObject, err: %s", err.Error())
+		return err
+	}
+
+	logrus.Infof("minio removeObject 成功, 名称: %s", objectName)
+	return nil
 }
 
 func PushObject(path string, prefix string) (string, error) {

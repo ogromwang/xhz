@@ -98,3 +98,24 @@ func (d *Dao) RecordByMe(param *model.RecordPageParam, uid uint) (resp []*model.
 	}
 	return
 }
+
+func (d *Dao) Delete(param *model.RecordDeleteParam, currUser *model.AccountDTO) (record *model.RecordMoney, err error) {
+	record = &model.RecordMoney{}
+
+	if err = config.AllConn.Db.Debug().Table(record.TableName()).
+		Where("account_id = ? AND id = ?", currUser.Id, param.Id).
+		First(record).Error; err != nil {
+		logrus.Errorf("[record|Delete] DB查询异常, %s", err.Error())
+		return
+	}
+
+	if err = config.AllConn.Db.Debug().Unscoped().
+		Where("account_id = ? AND id = ?", currUser.Id, param.Id).
+		Delete(&model.RecordMoney{}).
+		Error; err != nil {
+		logrus.Errorf("[record|Delete] 删除异常, %s", err.Error())
+		return
+	}
+
+	return
+}
