@@ -12,10 +12,11 @@ func router(r *gin.Engine, s *service.Service) {
 }
 
 func v1(r *gin.Engine, s *service.Service) {
+	r.Use(Cors())
+
 	// 8 Mib 这不能限制，是占用多少内存
 	r.MaxMultipartMemory = 8 << 20
 	routerGroup := r.Group("v1")
-	routerGroup.Use(Cors())
 
 	// 绕过鉴权
 	account := routerGroup.Group("account")
