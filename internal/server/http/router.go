@@ -12,7 +12,8 @@ func router(r *gin.Engine, s *service.Service) {
 }
 
 func v1(r *gin.Engine, s *service.Service) {
-	r.Use(Cors())
+	// 使用网关控制
+	// r.Use(Cors())
 
 	// 8 Mib 这不能限制，是占用多少内存
 	r.MaxMultipartMemory = 8 << 20
