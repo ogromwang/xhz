@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/nfnt/resize"
+	"image"
+	_ "image/gif"
 	"image/jpeg"
+	_ "image/png"
 	"os"
 	"path"
 )
@@ -40,7 +43,8 @@ func FormatFileSize(fileSize int64) (size string) {
 }
 
 func ImgFileResize(file, out *os.File, width uint) (err error) {
-	img, err := jpeg.Decode(file)
+	img, _, err := image.Decode(file)
+	// img, err := jpeg.Decode(file)
 	if err != nil {
 		return
 	}
